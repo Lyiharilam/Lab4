@@ -7,173 +7,88 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using Lab1.Models;
 using Lab1.Utils;
 using Lab2.Exceptions;
+using Lab4.DataAccess;
+using Lab4.Models;
+using System.Collections.ObjectModel;
 
 namespace Lab1.ViewModels
 {
-    internal class MainWindowViewModel: INotifyPropertyChanged
+    public class PersonViewModel
     {
-        #region Fields
-        private Person _user = new();
-        private bool _isFormFilled = false;
-        #endregion
+        private ICommand _saveCommand;
+        private ICommand _resetCommand;
+        private ICommand _editCommand;
+        private ICommand _deleteCommand;
+        private PersonRepository _repository;
+        private Person _personEntity = null;
+        public PersonRecord PersonRecord { get; set; }
 
-        #region Commands
-        private RelayCommand<object> _submitCommand;
-        #endregion
-
-        #region Properties
-        public DateTime Birthday
-        {
-            get { return _user.Birthday; }
-            set
-            {
-                _user.Birthday = value;
-            }
-        }
-
-        public string EasternZodiacSign
-        {
-            get { return _user.EasternZodiacSign; }
-            set
-            {
-                _user.EasternZodiacSign = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        public string Name
-        {
-            get { return _user.Name; }
-            set
-            {
-                _user.Name = value;
-                ValidateForm();
-                NotifyPropertyChanged();
-            }
-        }
-
-        public string NameToDisplay
-        {
-            get { return _user.Name; }
-            set
-            {
-                _user.Name = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        public string Surname
-        {
-            get { return _user.Surname; }
-            set
-            {
-                _user.Surname = value;
-                ValidateForm();
-                NotifyPropertyChanged();
-            }
-        }
-
-        public string SurnameToDisplay
-        {
-            get { return _user.Surname; }
-            set
-            {
-                _user.Surname = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        public string Email
-        {
-            get { return _user.Email; }
-            set
-            {
-                _user.Email = value;
-                ValidateForm();
-                NotifyPropertyChanged();
-            }
-        }
-
-        public string EmailToDisplay
-        {
-            get { return _user.Email; }
-            set
-            {
-                _user.Email = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        public string WesternZodiacSign
-        {
-            get { return _user.WesternZodiacSign; }
-            set
-            {
-                _user.WesternZodiacSign = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        public int Age
-        {
-            get { return _user.Age; }
-            set 
-            {
-                _user.Age = value;
-                ValidateForm();
-                NotifyPropertyChanged();
-            }
-        }
-
-        public bool IsFormFilled
-        {
-            get { return _isFormFilled; }
-            set
-            {
-               _isFormFilled = value;
-                NotifyPropertyChanged();
-            }
-        }
-        
-
-        public RelayCommand<object> SubmitCommand
+        public ICommand ResetCommand
         {
             get
             {
-                return _submitCommand ??= new RelayCommand<object>(_ => Submit(), CanExecute);           
-                            
+                if (_resetCommand == null)
+                    _resetCommand = new RelayCommand(param => ResetData(), null);
+
+                return _resetCommand;
             }
-            
-        }
-        #endregion
-
-        #region Methods
-        private bool CanExecute(object obj)
-        {
-            return true;
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        public ICommand SaveCommand
         {
-            if (PropertyChanged != null)
+            get
             {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+                if (_saveCommand == null)
+                    _saveCommand = new RelayCommand(param => SaveData(), null);
+
+                return _saveCommand;
             }
         }
 
-        private void ValidateForm()
+        public ICommand EditCommand
         {
-            IsFormFilled =
-                !(
-                String.IsNullOrWhiteSpace(_user.Name)
-                || String.IsNullOrWhiteSpace(_user.Email)
-                || String.IsNullOrWhiteSpace(_user.Surname)
-                );
+            get
+            {
+                if (_editCommand == null)
+                    _editCommand = new RelayCommand(param => EditData((int)param), null);
+
+                return _editCommand;
+            }
+        }
+
+        public ICommand DeleteCommand
+        {
+            get
+            {
+                if (_deleteCommand == null)
+                    _deleteCommand = new RelayCommand(param => DeleteStudent((int)param), null);
+
+                return _deleteCommand;
+            }
+        }
+
+        public PersonViewModel()
+        {
+            _personEntity = new Person();
+            _repository = new PersonRepository();
+            PersonRecord = new PersonRecord();
+            GetAll();
+        }
+
+        public void ResetData()
+        {
+            PersonRecord.Name = string.Empty;
+            PersonRecord.Id = 0;
+            PersonRecord.Surname = string.Empty;
+            PersonRecord.Email = string.Empty;
+            PersonRecord.WesternZodiacSign = string.Empty;
+            PersonRecord.EasternZodiacSign = string.Empty;
+            PersonRecord.Birthday = DateTime.Now;
+            PersonRecord.Age = 0;
         }
 
         private static void ValidateEmail(string email)
@@ -186,44 +101,106 @@ namespace Lab1.ViewModels
                 throw new InvalidEmail(email + " is Invalid Email Address");
         }
 
-        private async void Submit()
+        public void DeleteStudent(int id)
         {
-            try
+            if (MessageBox.Show("Confirm delete of this record?", "Person", MessageBoxButton.YesNo)
+                == MessageBoxResult.Yes)
             {
-                if (_user.Birthday > _user.today)
+                try
                 {
-                    throw new InvalidFutureDate("Invalid future date");
+                    _repository.RemoveStudent(id);
+                    MessageBox.Show("Record successfully deleted.");
                 }
-                if (_user.Age > 135)
+                catch (Exception ex)
                 {
-                    throw new InvalidPastDate("Invalid past date");
+                    MessageBox.Show("Error occured while saving. " + ex.InnerException);
                 }
-                ValidateEmail(_user.Email);
+                finally
+                {
+                    GetAll();
+                }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-                return;
-            }
-            
-            if (_user.IsBirthday)
-            {
-                MessageBox.Show("Happy birthday!");
-            }
-            
-            await _user.DetermineWesternZodiacSign();
-            await _user.DetermineEasternZodiacSign();
+        }
 
-            Age = _user.Age;
-            WesternZodiacSign = _user.SunSign;
-            EasternZodiacSign = _user.ChineseSign;
-            NameToDisplay = _user.Name;
-            SurnameToDisplay = _user.Surname;
-            EmailToDisplay = _user.Email;
+        public void SaveData()
+        {
+            if (PersonRecord != null)
+            {
+                _personEntity = new Person();
+                _personEntity.Name = PersonRecord.Name;
+                _personEntity.Age = PersonRecord.Age;
+                _personEntity.Surname = PersonRecord.Surname;
+                _personEntity.Email = PersonRecord.Email;
+                _personEntity.WesternZodiacSign = PersonRecord.WesternZodiacSign;
+                _personEntity.EasternZodiacSign = PersonRecord.EasternZodiacSign;
+                _personEntity.Birthday = PersonRecord.Birthday;
+
+                try
+                {
+                    if (_personEntity.Birthday > _personEntity.today)
+                    {
+                        throw new InvalidFutureDate("Invalid future date");
+                    }
+                    _personEntity.CalculateAge();
+                    if (_personEntity.Age > 135)
+                    {
+                        throw new InvalidPastDate("Invalid past date");
+                    }
+                    ValidateEmail(_personEntity.Email);
+
+                    if (PersonRecord.Id <= 0)
+                    {
+                        _repository.AddPerson(_personEntity);
+                        MessageBox.Show("New record successfully saved.");
+                    }
+                    else
+                    {
+                        _personEntity.ID = PersonRecord.Id;
+                        _repository.UpdatePerson(_personEntity);
+                        MessageBox.Show("Record successfully updated.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    return;
+                }
+                finally
+                {
+                    GetAll();
+                    ResetData();
+                }
+            }
+        }
+
+        public void EditData(int id)
+        {
+            var model = _repository.Get(id);
+            PersonRecord.Id = model.ID;
+            PersonRecord.Name = model.Name;
+            PersonRecord.Email = model.Email;
+            PersonRecord.Surname = model.Surname;
+            PersonRecord.Age = (int)model.Age;
+            PersonRecord.Birthday = model.Birthday;
+            PersonRecord.WesternZodiacSign = model.WesternZodiacSign;
+            PersonRecord.EasternZodiacSign = model.EasternZodiacSign;
 
         }
-        #endregion
 
-
+        public void GetAll()
+        {
+            PersonRecord.PersonRecords = new ObservableCollection<PersonRecord>();
+            _repository.GetAll().ForEach(data => PersonRecord.PersonRecords.Add(new PersonRecord()
+            {
+                Id = data.ID,
+                Name = data.Name,
+                Email = data.Email,
+                Birthday = data.Birthday,
+                WesternZodiacSign = data.WesternZodiacSign,
+                EasternZodiacSign = data.EasternZodiacSign,
+                Age = Convert.ToInt32(data.Age),
+                Surname = data.Surname
+            }));
+        }
     }
 }

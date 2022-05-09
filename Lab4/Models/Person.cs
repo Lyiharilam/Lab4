@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Lab1.Models
 {
-    internal class Person
+    public class Person
     {
         #region Fields
         private DateTime _birthday = DateTime.Today;
@@ -20,6 +20,21 @@ namespace Lab1.Models
         public readonly DateTime today = DateTime.Today;
         #endregion
 
+
+        private int _id;
+        public int ID
+        {
+            get
+            {
+                return _id;
+            }
+            set
+            {
+                _id = value;
+
+            }
+        }
+
         #region Properties
         public DateTime Birthday
         {
@@ -27,7 +42,6 @@ namespace Lab1.Models
             set 
             {
                 _birthday = value;
-                CalculateAge();
             }
         }
 
@@ -101,10 +115,122 @@ namespace Lab1.Models
         public Person() { }
 
         #region Methods
-        public async Task DetermineWesternZodiacSign()
+        //public async Task DetermineWesternZodiacSign()
+        //{
+        //    await Task.Run(() => 
+        //    {
+        //        int month = Birthday.Month;
+        //        int day = Birthday.Day;
+        //        string sign = "";
+
+        //        if (month == 12)
+        //        {
+
+        //            if (day < 22)
+        //                sign = "Sagittarius";
+        //            else
+        //                sign = "Capricorn";
+        //        }
+
+        //        else if (month == 1)
+        //        {
+        //            if (day < 20)
+        //                sign = "Capricorn";
+        //            else
+        //                sign = "Aquarius";
+        //        }
+
+        //        else if (month == 2)
+        //        {
+        //            if (day < 19)
+        //                sign = "Aquarius";
+        //            else
+        //                sign = "Pisces";
+        //        }
+
+        //        else if (month == 3)
+        //        {
+        //            if (day < 21)
+        //                sign = "Pisces";
+        //            else
+        //                sign = "Aries";
+        //        }
+        //        else if (month == 4)
+        //        {
+        //            if (day < 20)
+        //                sign = "Aries";
+        //            else
+        //                sign = "Taurus";
+        //        }
+
+        //        else if (month == 5)
+        //        {
+        //            if (day < 21)
+        //                sign = "Taurus";
+        //            else
+        //                sign = "Gemini";
+        //        }
+
+        //        else if (month == 6)
+        //        {
+        //            if (day < 21)
+        //                sign = "Gemini";
+        //            else
+        //                sign = "Cancer";
+        //        }
+
+        //        else if (month == 7)
+        //        {
+        //            if (day < 23)
+        //                sign = "Cancer";
+        //            else
+        //                sign = "Leo";
+        //        }
+
+        //        else if (month == 8)
+        //        {
+        //            if (day < 23)
+        //                sign = "Leo";
+        //            else
+        //                sign = "Virgo";
+        //        }
+
+        //        else if (month == 9)
+        //        {
+        //            if (day < 23)
+        //                sign = "Virgo";
+        //            else
+        //                sign = "Libra";
+        //        }
+
+        //        else if (month == 10)
+        //        {
+        //            if (day < 23)
+        //                sign = "Libra";
+        //            else
+        //                sign = "Scorpio";
+        //        }
+
+        //        else if (month == 11)
+        //        {
+        //            if (day < 22)
+        //                sign = "Scorpio";
+        //            else
+        //                sign = "Sagittarius";
+        //        }
+
+        //        else if (month > 12 || month <= 0)
+        //        {
+        //            sign = "";
+        //        }
+
+        //        WesternZodiacSign = sign;
+        //    }
+        //    );
+        //}
+        public void DetermineWesternZodiacSign()
         {
-            await Task.Run(() => 
-            {
+            
                 int month = Birthday.Month;
                 int day = Birthday.Day;
                 string sign = "";
@@ -211,14 +337,28 @@ namespace Lab1.Models
                 }
 
                 WesternZodiacSign = sign;
-            }
-            );
+            
         }
+        //public async Task DetermineEasternZodiacSign()
+        //{
+        //    await Task.Run(() => 
+        //    {
+        //        int year = Birthday.Year;
+        //        string[] animals = { "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig" };
+        //        string[] elements = { "Wood", "Fire", "Earth", "Metal", "Water" };
+        //        string[] animalChars = { "子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥" };
+        //        string[,] elementChars = { { "甲", "丙", "戊", "庚", "壬" }, { "乙", "丁", "己", "辛", "癸" } };
+        //        int ei = (int)Math.Floor((year - 4.0) % 10 / 2);
+        //        int ai = (year - 4) % 12;
 
-        public async Task DetermineEasternZodiacSign()
-        {
-            await Task.Run(() => 
-            {
+        //        EasternZodiacSign = $"{elements[ei]} {animals[ai]}. " +
+        //            $"{elementChars[year % 2, ei]}" +
+        //            $"{animalChars[(year - 4) % 12]}";
+        //    });
+
+        //}
+        public void DetermineEasternZodiacSign()
+        {   
                 int year = Birthday.Year;
                 string[] animals = { "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig" };
                 string[] elements = { "Wood", "Fire", "Earth", "Metal", "Water" };
@@ -230,11 +370,9 @@ namespace Lab1.Models
                 EasternZodiacSign = $"{elements[ei]} {animals[ai]}. " +
                     $"{elementChars[year % 2, ei]}" +
                     $"{animalChars[(year - 4) % 12]}";
-            });
-           
-        }
 
-        private void CalculateAge()
+        }
+        public void CalculateAge()
         {
             int userAge = today.Year - Birthday.Year;
             if (Birthday.Date > today.AddYears(-userAge)) userAge--;

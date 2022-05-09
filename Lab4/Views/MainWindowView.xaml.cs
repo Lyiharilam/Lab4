@@ -16,16 +16,12 @@ using Lab1.ViewModels;
 
 namespace Lab1.Views
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindowView : Window
     {
-        private MainWindowViewModel _viewModel;
         public MainWindowView()
         {
             InitializeComponent();
-            DataContext = _viewModel = new MainWindowViewModel();
+            this.DataContext = new PersonViewModel();
         }
     }
 }
